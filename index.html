@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Snake 2077</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff0080;
+            --neon-blue: #00ffd5;
+            --neon-yellow: #f7ff00;
+            --dark-bg: #0a0a0f;
+            --cyber-border: 2px solid var(--neon-blue);
+        }
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--dark-bg);
+            font-family: 'Share Tech Mono', monospace;
+            color: white;
+            cursor: crosshair;
+        }
+        
+        canvas {
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #game-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+            background: radial-gradient(circle, transparent 60%, rgba(10, 10, 15, 0.4) 100%);
+            background-size: cover;
+        }
+        
+        #game-overlay::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 2px,
+                rgba(10, 10, 15, 0.1) 3px,
+                rgba(10, 10, 15, 0.1) 3px
+            );
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        #score-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #score-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--neon-blue);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        #score {
+            color: white;
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--neon-blue);
+            padding: 8px 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-blue);
+            clip-path: polygon(0% 0%, 95% 0%, 100% 20%, 100% 100%, 5% 100%, 0% 80%);
+        }
+        
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            z-index: 10;
+            text-align: center;
+            text-shadow: 0 0 5px var(--neon-blue);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            clip-path: polygon(5% 0%, 95% 0%, 100% 20%, 100% 100%, 0% 100%, 0% 20%);
+            box-shadow: 0 0 15px rgba(0, 255, 213, 0.3);
+            border: var(--cyber-border);
+            white-space: nowrap;
+        }
+        
+        .key {
+            display: inline-block;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 4px 10px;
+            margin: 0 3px;
+            font-weight: bold;
+            color: var(--neon-pink);
+            box-shadow: 0 0 8px var(--neon-pink);
+            border: 1px solid var(--neon-pink);
+            min-width: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .key::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 150%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-pink), transparent);
+            animation: scanline 2s infinite;
+        }
+        
+        #game-title {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--neon-yellow);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 42px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--neon-yellow), 0 0 20px var(--neon-yellow);
+            z-index: 10;
+            pointer-events: none;
+            clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%, 10% 50%);
+            padding: 5px 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-yellow);
+        }
+        
+        #glitch-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 5;
+            background: transparent;
+            animation: glitch 10s infinite;
+            opacity: 0;
+        }
+        
+        @keyframes scanline {
+            0% { top: -100%; }
+            100% { top: 300%; }
+        }
+        
+        @keyframes glitch {
+            0%, 90%, 100% { opacity: 0; }
+            92%, 94%, 96% { 
+                opacity: 0.1; 
+                background: linear-gradient(
+                    rgba(255, 0, 128, 0.1),
+                    rgba(0, 255, 213, 0.1)
+                );
+                transform: translate3d(5px, 0, 0);
+            }
+            93%, 95%, 97% { 
+                opacity: 0.1; 
+                background: linear-gradient(
+                    rgba(0, 255, 213, 0.1),
+                    rgba(255, 0, 128, 0.1)
+                );
+                transform: translate3d(-5px, 0, 0);
+            }
+        }
+        
+        #hud-corners {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 4;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid transparent;
+        }
+        
+        #corner-tl {
+            top: 10px;
+            left: 10px;
+            border-top: 3px solid var(--neon-blue);
+            border-left: 3px solid var(--neon-blue);
+        }
+        
+        #corner-tr {
+            top: 10px;
+            right: 10px;
+            border-top: 3px solid var(--neon-pink);
+            border-right: 3px solid var(--neon-pink);
+        }
+        
+        #corner-bl {
+            bottom: 10px;
+            left: 10px;
+            border-bottom: 3px solid var(--neon-pink);
+            border-left: 3px solid var(--neon-pink);
+        }
+        
+        #corner-br {
+            bottom: 10px;
+            right: 10px;
+            border-bottom: 3px solid var(--neon-blue);
+            border-right: 3px solid var(--neon-blue);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-overlay"></div>
+    <div id="glitch-effect"></div>
+    
+    <div id="hud-corners">
+        <div id="corner-tl" class="corner"></div>
+        <div id="corner-tr" class="corner"></div>
+        <div id="corner-bl" class="corner"></div>
+        <div id="corner-br" class="corner"></div>
+    </div>
+    
+    <div id="game-title">CYBER SNAKE 2077</div>
+    
+    <div id="score-container">
+        <div id="score-label">Score</div>
+        <div id="score">0</div>
+    </div>
+    
+    <div id="instructions">
+        MOVE: <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> or 
+        <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> | 
+        PAUSE: <span class="key">SPACE</span>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
